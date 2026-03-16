@@ -61,6 +61,25 @@ LLM 只在必要时介入
 - 评级数据库: `database/stock_ratings.json`
 - 数据库脚本: `scripts/db.py`
 
+## 跨平台支持
+
+根据运行环境选择对应的 stock-data 工具：
+
+| 平台 | 工具路径 |
+|------|---------|
+| Windows | `bin/stock-data-windows-x86_64.exe` |
+| Linux | `bin/stock-data-linux-x86_64` |
+| macOS (Apple Silicon) | `bin/stock-data-darwin-aarch64` |
+
+**自动检测命令:**
+```bash
+# Linux/macOS
+STOCK_DATA="bin/stock-data-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)"
+
+# Windows PowerShell
+$STOCK_DATA = "bin/stock-data-windows-x86_64.exe"
+```
+
 ## 内置子技能
 - **stock-data**: 股票数据查询工具
   - 文档: `skills/STOCK_DATA.md`
