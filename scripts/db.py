@@ -172,6 +172,14 @@ def cmd_list(args):
     if args.sector:
         stocks = [s for s in stocks if args.sector.lower() in s.get("sector", "").lower()]
     
+    # Filter by reviewed status
+    if args.reviewed:
+        stocks = [s for s in stocks if s.get("user_rating")]
+    
+    # Filter by minimum user stars
+    if args.user_stars:
+        stocks = [s for s in stocks if (s.get("user_rating") or 0) >= args.user_stars]
+    
     # Sort
     if args.sort == "user":
         stocks.sort(key=lambda x: (x.get("user_rating") or 0, x.get("ai_total_score") or 0), reverse=True)
@@ -564,6 +572,47 @@ def cmd_stats(args):
         print(f"{sector}: {count}")
 
 
+def cmd_sectors(args):
+    """List all available sectors with stock counts"""
+    db = load_db()
+    stocks = db.get("stocks", [])
+    
+    # Collect sectors
+    sectors = {}
+    for s in stocks:
+        sector = s.get("sector", "未知")
+        if sector not in sectors:
+            sectors[sector] = {"count": 0, "avg_ai_score": 0, "reviewed": 0, "stocks": []}
+        sectors[sector]["count"] += 1
+        if s.get("ai_total_score"):
+            sectors[sector]["avg_ai_score"] += s["ai_total_score"]
+        if s.get("user_rating"):
+            sectors[sector]["reviewed"] += 1
+        sectors[sector]["stocks"].append(s.get("stock_name", ""))
+    
+    # Calculate averages
+    for sector in sectors:
+        if sectors[sector]["count"] > 0:
+            sectors[sector]["avg_ai_score"] = round(
+                sectors[sector]["avg_ai_score"] / sectors[sector]["count"], 2
+            )
+    
+    # Sort by count
+    sorted_sectors = sorted(sectors.items(), key=lambda x: x[1]["count"], reverse=True)
+    
+    print(f"{'#':<3} {'板块名称':<12} {'股票数':<8} {'平均AI分':<10} {'已评级':<8} {'代表股票'}")
+    print("-" * 80)
+    for i, (sector, info) in enumerate(sorted_sectors, 1):
+        # Show top 3 stocks as examples
+        example_stocks = ", ".join(info["stocks"][:3])
+        if len(info["stocks"]) > 3:
+            example_stocks += "..."
+        print(f"{i:<3} {sector:<12} {info['count']:<8} {info['avg_ai_score']:<10} "
+              f"{info['reviewed']:<8} {example_stocks}")
+    
+    print(f"\n共 {len(sectors)} 个板块")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Gold Miner Database CLI Tool")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
@@ -571,8 +620,10 @@ def main():
     # list command
     list_parser = subparsers.add_parser("list", help="List stocks")
     list_parser.add_argument("--top", type=int, help="Limit to top N")
-    list_parser.add_argument("--sort", choices=["ai", "user"], default="ai", help="Sort by")
-    list_parser.add_argument("--sector", help="Filter by sector")
+    list_parser.add_argument("--sort", choices=["ai", "user"], default="ai", help="Sort by ai score or user rating")
+    list_parser.add_argument("--sector", help="Filter by sector (e.g., PCB, 光通信, AI芯片)")
+    list_parser.add_argument("--reviewed", action="store_true", help="Only show user-reviewed stocks")
+    list_parser.add_argument("--user-stars", type=int, dest="user_stars", help="Minimum user stars (1-5)")
     
     # get command
     get_parser = subparsers.add_parser("get", help="Get stock details")
@@ -632,6 +683,9 @@ def main():
     # stats command
     stats_parser = subparsers.add_parser("stats", help="Show statistics")
     
+    # sectors command
+    sectors_parser = subparsers.add_parser("sectors", help="List all available sectors")
+    
     args = parser.parse_args()
     
     if args.command == "list":
@@ -654,6 +708,8 @@ def main():
         cmd_export(args)
     elif args.command == "stats":
         cmd_stats(args)
+    elif args.command == "sectors":
+        cmd_sectors(args)
     else:
         parser.print_help()
 

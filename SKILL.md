@@ -541,6 +541,23 @@ $DB_SCRIPT list --top 50 --sort ai              # 前50名
 
 # 按板块筛选
 $DB_SCRIPT list --sector 光通信
+$DB_SCRIPT list --sector PCB --top 5 --sort ai  # PCB板块AI评级前5
+
+# 按用户评级排序
+$DB_SCRIPT list --top 10 --sort user            # 按用户评级排序
+
+# 只看用户已评级的股票
+$DB_SCRIPT list --reviewed --sort user          # 已评级股票，按用户评级排序
+
+# 筛选用户评级达到指定星级的股票
+$DB_SCRIPT list --user-stars 4 --sort user      # 用户评级4星及以上
+
+# 组合筛选：板块 + 排序
+$DB_SCRIPT list --sector 光通信 --top 5 --sort ai      # 光通信AI评级前5
+$DB_SCRIPT list --sector PCB --reviewed --sort user    # PCB板块已评级股票
+
+# 查看所有板块
+$DB_SCRIPT sectors                               # 列出所有板块及股票数
 
 # 查看单只股票详情
 $DB_SCRIPT get {代码}
@@ -581,10 +598,13 @@ $DB_SCRIPT stats
 
 | 需求 | 推荐命令 | 说明 |
 |------|---------|------|
-| 查排行榜前N名 | `db.py list --top N --sort ai` | ⭐ 按AI评分排序，显示所有星级 |
+| 查排行榜前N名 | `db.py list --top N --sort ai` | ⭐ 按AI评分排序 |
+| 按用户评级排序 | `db.py list --top N --sort user` | 用户已评级的排前面 |
+| 只看已评级股票 | `db.py list --reviewed` | 只显示用户评过分的 |
 | 查五星金矿股 | `query_stars.py` | 默认只显示五星 |
 | 查四星及以上 | `query_stars.py --stars 4` | 显示四星+五星 |
 | 按板块筛选 | `db.py list --sector 板块名` | 指定板块 |
+| 查看所有板块 | `db.py sectors` | 列出板块及统计 |
 
 ### 有效维度名称
 | 维度名 | 中文名 | 自动化程度 |
